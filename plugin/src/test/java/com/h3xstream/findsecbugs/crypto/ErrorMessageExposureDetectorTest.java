@@ -41,7 +41,8 @@ public class ErrorMessageExposureDetectorTest extends BaseDetectorTest {
         analyze(files, reporter);
 
         for (String method : Arrays.asList("vulnerableErrorMessage1"
-                ,"vulnerableErrorMessage2")) {
+                ,"vulnerableErrorMessage2"
+                ,"vulnerableErrorMessage3")) {
             verify(reporter).doReportBug(
                     bugDefinition()
                             .bugType("INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE")

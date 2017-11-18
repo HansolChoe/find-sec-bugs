@@ -24,6 +24,9 @@ import edu.umd.cs.findbugs.Priorities;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import org.apache.bcel.Constants;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+
 /**
  * Printing error messages to standard output may expose security-sensitive information,
  * and such an exposure of unencrypted information would be vulnerable as reported
@@ -45,23 +48,28 @@ public class ErrorMessageExposureDetector extends OpcodeStackDetector {
     public void sawOpcode(int seen) {
 //        printOpCode(seen);
         if (seen == Constants.INVOKEVIRTUAL ) {
-            if(isVulnerableClassToPrint(getClassConstantOperand())
-                    && getNameConstantOperand().equals("printStackTrace")) {
-                final OpcodeStack.Item item = stack.getStackItem(0);
+            String fullClassName = getClassConstantOperand();
+            String method = getNameConstantOperand();
 
-                if(item != null) {
-                    bugReporter.reportBug(new BugInstance(this,
-                            INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE_TYPE,
-                            Priorities.NORMAL_PRIORITY)
-                            .addClass(this).addMethod(this).addSourceLine(this));
+            if(isVulnerableClassToPrint(fullClassName)
+                    && method.equals("printStackTrace")) {
+                if (stack.getStackDepth() > 1 ) { // has parameters
+                    OpcodeStack.Item parameter = stack.getStackItem(0);
+                    if(parameter.getSignature().equals("Ljava/io/PrintStream;")||
+                            parameter.getSignature().equals("Ljava/io/PrintWriter;")) {
+                        bugReporter.reportBug(new BugInstance(this,
+                                INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE_TYPE,
+                                Priorities.NORMAL_PRIORITY)
+                                .addClass(this).addMethod(this).addSourceLine(this));
+                    }
                 } else {
                     bugReporter.reportBug(new BugInstance(this,
                             INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE_TYPE,
                             Priorities.LOW_PRIORITY)
                             .addClass(this).addMethod(this).addSourceLine(this));
                 }
-            } else if (isParentOfExceptionClass(getClassConstantOperand())
-                    && getNameConstantOperand().equals("printStackTrace")) {
+            } else if (isParentOfExceptionClass(fullClassName)
+                    && method.equals("printStackTrace")) {
                 bugReporter.reportBug(new BugInstance(this,
                         INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE_TYPE,
                         Priorities.LOW_PRIORITY)

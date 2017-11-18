@@ -14,18 +14,20 @@ import static java.lang.System.out;
 public class ErrorMessages {
     public void vulnerableErrorMessage1(HttpServletRequest req, HttpServletResponse resp) {
         try {
+            Connection conn = DriverManager.getConnection("jdbc:mysql://prod.company.com/production");
             OutputStream out = resp.getOutputStream();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace(out); // Normal Priority
         } catch (Exception e) {
-            e.printStackTrace(out);
+            e.printStackTrace(); // Low Priority
         }
     }
 
     public void vulnerableErrorMessage2() {
         try {
-            String password = "Password";
             Connection conn = DriverManager.getConnection("jdbc:mysql://prod.company.com/production");
         } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
+            sqlException.printStackTrace(); // Low Priority
         }
     }
 
@@ -34,8 +36,8 @@ public class ErrorMessages {
         try {
             String fileName = "fileName";
             fis = new FileInputStream(fileName);
-        } catch (FileNotFoundException fileNotFoundException) {
-            fileNotFoundException.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace(); // Low Priority
         }
     }
 }
